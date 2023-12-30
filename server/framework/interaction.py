@@ -1,21 +1,22 @@
 import logging
 from typing import Callable
 
-
-
 event_handlers = {}
 client_commands = {}
+
 
 def server_event(event_id: str) -> Callable:
     """
     Registers a server event
     :param event_id: str
     """
+
     def decorator(func):
         if event_id not in event_handlers:
             event_handlers[event_id] = []
         event_handlers[event_id].append(func)
         return func
+
     return decorator
 
 
@@ -34,14 +35,16 @@ def trigger_server_event(event_id: str, *args, **kwargs) -> None:
                 logging.error(f"Error while executing event handler {handler.__name__}: {e}")
 
 
-def command(func: Callable) -> Callable:
+def command() -> Callable:
     """
     Registers a command
     """
+
     def decorator(func):
         if func.__name__ not in client_commands:
             client_commands[func.__name__] = func
         return func
+
     return decorator
 
 
@@ -57,4 +60,3 @@ def trigger_command(command_name: str, *args, **kwargs) -> None:
             client_commands[command_name](*args, **kwargs)
         except Exception as e:
             logging.error(f"Error while executing command {command_name}: {e}")
-    

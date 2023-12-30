@@ -2,17 +2,20 @@ import socket
 import logging
 import threading
 
-from utils.config import get_config_key
-from framework.interaction import server_event, trigger_server_event, command, trigger_command
+from ..utils.config import get_config_key
+from ..utils.encryption import get_encryption_key
+from ..framework.interaction import server_event, trigger_server_event, command, trigger_command
 
 
 class Server:
     def __init__(self):
-        self.socket: socket.socket  # initialization of instance variable; no declaration
+        self.socket = None  # initialization of instance variable
         self.config = {
-                    "address": get_config_key(key="server_address"),  # the address to listen on
-                    "port": get_config_key(key="server_port")  # the port to listen on
-                }
+            "address": get_config_key(key="server_address"),  # the address to listen on
+            "port": get_config_key(key="server_port"),  # the port to listen on
+            "symmetric_key": get_encryption_key(),  # the symmetric key to use for encryption
+            "admin": ("", None)
+        }
         self.clients = []  # containing client socket objects
         self.nicknames = []  # containing client nicknames
 
@@ -112,7 +115,7 @@ class Server:
         logging.debug("Message received")
         self.broadcast(message, sender)
 
-    @command
+    @command()
     def disconnect(self, msg, client: socket.socket) -> None:
         """
         Disconnects a client
@@ -123,4 +126,5 @@ class Server:
         self.clients.pop(self.clients.index(client))
         client.close()
         self.nicknames.pop(self.clients.index(client))
-        self.broadcast(f"{self.nicknames[self.clients.index(client)]} disconnected from the server\n".encode("utf-8"), client)
+        self.broadcast(f"{self.nicknames[self.clients.index(client)]} disconnected from the server\n".encode("utf-8"),
+                       client)
